@@ -1,5 +1,5 @@
 use rustler::{Encoder, Env, ResourceArc, Term};
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::sync::Mutex;
 
 struct ProcessResource {
@@ -28,7 +28,7 @@ fn spawn(
     arg_list: Vec<String>,
     envs: std::collections::HashMap<String, String>,
 ) -> SpawnResult {
-    let spawn_result = Command::new(program).args(arg_list).envs(envs).spawn();
+    let spawn_result = Command::new(program).args(arg_list).envs(envs).stdin(Stdio::null()).stdout(Stdio::null()).spawn();
     match spawn_result {
         Ok(child) => {
             let resource = ResourceArc::new(ProcessResource {
