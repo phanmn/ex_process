@@ -1,9 +1,25 @@
-use rustler::{Env, Error, ResourceArc, Return, Term};
+use rustler::{Encoder, Env, ResourceArc, Term};
 use std::process::Command;
 use std::sync::Mutex;
 
 struct ProcessResource {
     pub child: Mutex<std::process::Child>,
+}
+
+rustler::atoms! { error, ok, }
+
+enum SpawnResult {
+    Success(ResourceArc<ProcessResource>),
+    Failure(String),
+}
+
+impl<'a> Encoder for SpawnResult {
+    fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
+        match self {
+            SpawnResult::Success(arc) => (ok(), arc).encode(env),
+            SpawnResult::Failure(msg) => (error(), msg).encode(env),
+        }
+    }
 }
 
 fn load(env: Env, _: Term) -> bool {
@@ -12,11 +28,11 @@ fn load(env: Env, _: Term) -> bool {
 }
 
 #[rustler::nif(schedule = "DirtyCpu")]
-fn run(
+fn spawn(
     program: String,
     arg_list: Vec<String>,
     envs: std::collections::HashMap<String, String>,
-) -> Result<ResourceArc<ProcessResource>, Error> {
+) -> SpawnResult {
     let spawn_result = Command::new(program).args(arg_list).envs(envs).spawn();
     match spawn_result {
         Ok(child) => {
@@ -24,11 +40,10 @@ fn run(
                 child: Mutex::new(child),
             });
 
-            Ok(resource)
-            // Ok(Return::Term(resource))
+            SpawnResult::Success(resource)
         }
-        Err(e) => Err(Error::Term(Box::new(format!("{:#}", e)))),
+        Err(e) => SpawnResult::Failure(format!("{:#}", e)),
     }
 }
 
-rustler::init!("Elixir.ExProcess.Command", [run], load = load);
+rustler::init!("Elixir.ExProcess.Command", [spawn], load = load);
