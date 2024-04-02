@@ -1,38 +1,34 @@
-use rustler::types::map::MapIterator;
+use rustler::{Env, Error, ResourceArc, Return, Term};
 use std::process::Command;
+use std::sync::Mutex;
 
-// #[derive(Debug, NifReturnable)]
-// struct Output {
-//     pub status: i32,
-//     pub stdout: String,
-//     pub stderr: String,
-// }
+struct ProcessResource {
+    pub child: Mutex<std::process::Child>,
+}
+
+fn load(env: Env, _: Term) -> bool {
+    rustler::resource!(ProcessResource, env);
+    true
+}
 
 #[rustler::nif(schedule = "DirtyCpu")]
-fn run(program: String, arg_list: Vec<String>, envs: MapIterator) -> i32 {
-    let mut child = Command::new(program);
-    add_arg(&mut child, arg_list);
-    add_env(&mut child, envs);
+fn run(
+    program: String,
+    arg_list: Vec<String>,
+    envs: std::collections::HashMap<String, String>,
+) -> Result<ResourceArc<ProcessResource>, Error> {
+    let spawn_result = Command::new(program).args(arg_list).envs(envs).spawn();
+    match spawn_result {
+        Ok(child) => {
+            let resource = ResourceArc::new(ProcessResource {
+                child: Mutex::new(child),
+            });
 
-    match child.output() {
-        Ok(output) => output.status.code().unwrap_or(-1),
-        _ => -2,
+            Ok(resource)
+            // Ok(Return::Term(resource))
+        }
+        Err(e) => Err(Error::Term(Box::new(format!("{:#}", e)))),
     }
 }
 
-rustler::init!("Elixir.ExProcess.Command", [run]);
-
-fn add_arg(command: &mut Command, mut v: Vec<String>) {
-    for arg in v.iter_mut() {
-        command.arg(arg);
-    }
-}
-
-fn add_env(command: &mut Command, envs: MapIterator) {
-    for (key, value) in envs {
-        let key_string = key.decode::<String>().unwrap();
-        let value_string = value.decode::<String>().unwrap();
-
-        command.env(key_string, value_string);
-    }
-}
+rustler::init!("Elixir.ExProcess.Command", [run], load = load);
