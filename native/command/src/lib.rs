@@ -72,4 +72,11 @@ fn try_wait(resource: ResourceArc<ProcessResource>) -> TryWaitResult {
     }
 }
 
-rustler::init!("Elixir.ExProcess.Command", [spawn, try_wait], load = load);
+#[rustler::nif]
+fn kill(resource: ResourceArc<ProcessResource>) -> bool {
+    let child = &mut *resource.child.lock().unwrap();
+    let _ = child.kill();
+    true
+}
+
+rustler::init!("Elixir.ExProcess.Command", [spawn, try_wait, kill], load = load);
