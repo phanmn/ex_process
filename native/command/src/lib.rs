@@ -79,4 +79,4 @@ fn kill(resource: ResourceArc<ProcessResource>) -> bool {
     true
 }
 
-rustler::init!("Elixir.ExProcess.Command", [spawn, try_wait, kill], load = load);
+rustler::init!("Elixir.ExProcess.Nif", [spawn, try_wait, kill], load = load);
