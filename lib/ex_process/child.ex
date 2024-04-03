@@ -6,4 +6,8 @@ defmodule ExProcess.Child do
   def kill(child) do
     ExProcess.Nif.kill(child)
   end
+
+  def pid(child) do
+    ExProcess.Nif.pid(child)
+  end
 end

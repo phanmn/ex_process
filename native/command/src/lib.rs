@@ -119,6 +119,12 @@ fn kill(resource: ResourceArc<ProcessResource>) -> bool {
     true
 }
 
+#[rustler::nif]
+fn pid(resource: ResourceArc<ProcessResource>) -> u32 {
+    let child = &mut *resource.child.lock().unwrap();
+    child.id()
+}
+
 rustler::init!(
     "Elixir.ExProcess.Nif",
     [
@@ -126,7 +132,8 @@ rustler::init!(
         runtime::stop_runtime,
         spawn,
         try_status,
-        kill
+        kill,
+        pid
     ],
     load = load
 );
