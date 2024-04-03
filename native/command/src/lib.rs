@@ -22,7 +22,7 @@ impl<'a> Encoder for SpawnResult {
     }
 }
 
-#[rustler::nif]
+#[rustler::nif(schedule = "DirtyCpu")]
 fn spawn(
     program: String,
     arg_list: Vec<String>,
@@ -62,7 +62,7 @@ fn load(env: Env, _: Term) -> bool {
     true
 }
 
-#[rustler::nif]
+#[rustler::nif(schedule = "DirtyIo")]
 fn try_wait(resource: ResourceArc<ProcessResource>) -> TryWaitResult {
     let child = &mut *resource.child.lock().unwrap();
     match child.try_wait() {
