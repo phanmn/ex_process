@@ -2,11 +2,20 @@ use rustler::{Encoder, Env, ResourceArc, Term};
 use std::process::{Command, Stdio};
 use std::sync::Mutex;
 
+mod runtime;
+
+mod atoms {
+    rustler::atoms! {
+        error,
+        ok,
+        none,
+        ex_process_runtime_stopped
+    }
+}
+
 struct ProcessResource {
     pub child: Mutex<std::process::Child>,
 }
-
-rustler::atoms! { error, ok, none}
 
 enum SpawnResult {
     Success(ResourceArc<ProcessResource>),
@@ -16,8 +25,8 @@ enum SpawnResult {
 impl<'a> Encoder for SpawnResult {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         match self {
-            SpawnResult::Success(arc) => (ok(), arc).encode(env),
-            SpawnResult::Failure(msg) => (error(), msg).encode(env),
+            SpawnResult::Success(arc) => (atoms::ok(), arc).encode(env),
+            SpawnResult::Failure(msg) => (atoms::error(), msg).encode(env),
         }
     }
 }
@@ -28,7 +37,12 @@ fn spawn(
     arg_list: Vec<String>,
     envs: std::collections::HashMap<String, String>,
 ) -> SpawnResult {
-    let spawn_result = Command::new(program).args(arg_list).envs(envs).stdin(Stdio::null()).stdout(Stdio::null()).spawn();
+    let spawn_result = Command::new(program)
+        .args(arg_list)
+        .envs(envs)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .spawn();
     match spawn_result {
         Ok(child) => {
             let resource = ResourceArc::new(ProcessResource {
@@ -50,15 +64,16 @@ enum TryWaitResult {
 impl<'a> Encoder for TryWaitResult {
     fn encode<'b>(&self, env: Env<'b>) -> Term<'b> {
         match self {
-            TryWaitResult::Success(arc) => (ok(), arc).encode(env),
-            TryWaitResult::Failure(msg) => (error(), msg).encode(env),
-            TryWaitResult::None => (ok(), none()).encode(env),
+            TryWaitResult::Success(arc) => (atoms::ok(), arc).encode(env),
+            TryWaitResult::Failure(msg) => (atoms::error(), msg).encode(env),
+            TryWaitResult::None => (atoms::ok(), atoms::none()).encode(env),
         }
     }
 }
 
 fn load(env: Env, _: Term) -> bool {
     rustler::resource!(ProcessResource, env);
+    rustler::resource!(runtime::RuntimeResource, env);
     true
 }
 
@@ -79,4 +94,14 @@ fn kill(resource: ResourceArc<ProcessResource>) -> bool {
     true
 }
 
-rustler::init!("Elixir.ExProcess.Nif", [spawn, try_wait, kill], load = load);
+rustler::init!(
+    "Elixir.ExProcess.Nif",
+    [
+        runtime::start_runtime,
+        runtime::stop_runtime,
+        spawn,
+        try_wait,
+        kill
+    ],
+    load = load
+);

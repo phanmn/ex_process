@@ -5,4 +5,7 @@ defmodule ExProcess.Nif do
   def spawn(_command, _args, _envs), do: :erlang.nif_error(:nif_not_loaded)
   def try_wait(_resource), do: :erlang.nif_error(:nif_not_loaded)
   def kill(_resource), do: :erlang.nif_error(:nif_not_loaded)
+
+  def start_runtime(_Pid), do: :erlang.nif_error(:nif_not_loaded)
+  def stop_runtime(_resource), do: :erlang.nif_error(:nif_not_loaded)
 end
