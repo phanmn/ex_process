@@ -1,6 +1,6 @@
 defmodule ExProcess.Child do
-  def try_wait(child) do
-    ExProcess.Nif.try_wait(child)
+  def try_status(child) do
+    ExProcess.Nif.try_status(child)
   end
 
   def kill(child) do

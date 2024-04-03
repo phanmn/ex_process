@@ -9,7 +9,13 @@ defmodule ExProcess.Runtime do
     Process.flag(:trap_exit, true)
 
     runtime = ExProcess.Nif.start_runtime(self())
+    :persistent_term.put(__MODULE__, runtime)
+
     {:ok, %{runtime: runtime}}
+  end
+
+  def get() do
+    :persistent_term.get(__MODULE__)
   end
 
   def handle_info(:ex_process_runtime_stopped, state) do

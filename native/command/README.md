@@ -1,4 +1,4 @@
-# NIF for Elixir.ExProcess.Command
+# NIF for Elixir.ExProcess.Nif
 
 ## To build the NIF module:
 
@@ -7,7 +7,7 @@
 ## To load the NIF:
 
 ```elixir
-defmodule ExProcess.Command do
+defmodule ExProcess.Nif do
   use Rustler, otp_app: :ex_process, crate: "command"
 
   # When your NIF is loaded, it will override this function.

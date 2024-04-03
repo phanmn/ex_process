@@ -34,7 +34,7 @@ struct Monitor {
 
 impl Drop for Monitor {
     fn drop(&mut self) {
-        OwnedEnv::new().send_and_clear(&self.pid, |env| {
+        let _ = OwnedEnv::new().send_and_clear(&self.pid, |env| {
             atoms::ex_process_runtime_stopped().encode(env)
         });
     }
