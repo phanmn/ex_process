@@ -10,7 +10,10 @@ mod atoms {
         ok,
         none,
         running,
-        ex_process_runtime_stopped
+        ex_process_runtime_stopped,
+        dead,
+        unknown
+
     }
 }
 
@@ -120,6 +123,16 @@ fn kill(resource: ResourceArc<ProcessResource>) -> bool {
 }
 
 #[rustler::nif]
+fn process_state(process_id: u32) -> rustler::Atom {
+    let id = process_alive::Pid::from(process_id);
+    match process_alive::state(id) {
+        process_alive::State::Alive => atoms::running(),
+        process_alive::State::Dead => atoms::dead(),
+        process_alive::State::Unknown => atoms::unknown(),
+    }
+}
+
+#[rustler::nif]
 fn pid(resource: ResourceArc<ProcessResource>) -> u32 {
     let child = &mut *resource.child.lock().unwrap();
     child.id()
@@ -133,7 +146,8 @@ rustler::init!(
         spawn,
         try_status,
         kill,
-        pid
+        pid,
+        process_state
     ],
     load = load
 );

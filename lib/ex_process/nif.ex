@@ -9,4 +9,5 @@ defmodule ExProcess.Nif do
 
   def start_runtime(_Pid), do: :erlang.nif_error(:nif_not_loaded)
   def stop_runtime(_resource), do: :erlang.nif_error(:nif_not_loaded)
+  def process_state(_pid), do: :erlang.nif_error(:nif_not_loaded)
 end
