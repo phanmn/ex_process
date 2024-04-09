@@ -1,5 +1,15 @@
 defmodule ExProcess.Nif do
-  use Rustler, otp_app: :ex_process, crate: "command"
+  # use Rustler, otp_app: :ex_process, crate: "command"
+
+  version = Mix.Project.config()[:version]
+
+  use RustlerPrecompiled,
+    otp_app: :ex_process,
+    crate: "command",
+    base_url:
+      "https://github.com/phanmn/ex_process/releases/download/v#{version}",
+    force_build: System.get_env("EX_PROCESS_BUILD") in ["1", "true"],
+    version: version
 
   # When your NIF is loaded, it will override this function.
   def spawn(_runtime, _command, _args, _envs), do: :erlang.nif_error(:nif_not_loaded)
