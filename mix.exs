@@ -21,7 +21,7 @@ defmodule ExProcess.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rustler, "~> 0.32.1", runtime: false}
+      {:rustler, "~> 0.35", runtime: false}
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
   end
